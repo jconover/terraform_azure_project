@@ -1,0 +1,43 @@
+formatter: markdown table
+
+version: ">= 0.18.0"
+
+sections:
+  show:
+    - header
+    - requirements
+    - providers
+    - inputs
+    - outputs
+    - resources
+
+content: |-
+  {{ .Header }}
+
+  ## Usage
+
+  ```hcl
+  module "example" {
+    source = "../path/to/module"
+    # see inputs below
+  }
+  ```
+
+  {{ .Requirements }}
+  {{ .Providers }}
+  {{ .Resources }}
+  {{ .Inputs }}
+  {{ .Outputs }}
+
+output:
+  file: README.md
+  mode: inject
+
+settings:
+  anchor: true
+  color: true
+  escape: true
+  indent: 2
+  required: true
+  sensitive: true
+  type: true
