@@ -1,0 +1,45 @@
+parameters:
+  - name: workingDirectory
+    type: string
+
+steps:
+  - script: |
+      echo "##[group]Terraform Format Check"
+      terraform fmt -check -recursive
+      echo "##[endgroup]"
+    displayName: 'Terraform Format Check'
+    workingDirectory: '${{ parameters.workingDirectory }}'
+    continueOnError: true
+
+  - script: |
+      echo "##[group]Terraform Validate"
+      terraform validate
+      echo "##[endgroup]"
+    displayName: 'Terraform Validate'
+    workingDirectory: '${{ parameters.workingDirectory }}'
+    continueOnError: true
+
+  - script: |
+      echo "##[group]Install TFLint"
+      curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+      echo "##[endgroup]"
+
+      echo "##[group]Run TFLint"
+      tflint --init --config=.tflint.hcl
+      tflint --config=.tflint.hcl
+      echo "##[endgroup]"
+    displayName: 'Run TFLint'
+    workingDirectory: '${{ parameters.workingDirectory }}'
+    continueOnError: true
+
+  - script: |
+      if find . -name '*.tftest.hcl' -o -name '*_test.tf' | grep -q .; then
+        echo "##[group]Terraform Test"
+        terraform test
+        echo "##[endgroup]"
+      else
+        echo "No test files found, skipping terraform test"
+      fi
+    displayName: 'Terraform Test'
+    workingDirectory: '${{ parameters.workingDirectory }}'
+    continueOnError: true

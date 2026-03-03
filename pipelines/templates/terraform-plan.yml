@@ -1,0 +1,60 @@
+parameters:
+  - name: workingDirectory
+    type: string
+  - name: varFile
+    type: string
+  - name: serviceConnection
+    type: string
+  - name: publishPlan
+    type: boolean
+    default: true
+
+steps:
+  - task: AzureCLI@2
+    displayName: 'Terraform Plan'
+    inputs:
+      azureSubscription: '${{ parameters.serviceConnection }}'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      addSpnToEnvironment: true
+      useWorkloadIdentityFederation: true
+      workingDirectory: '${{ parameters.workingDirectory }}'
+      inlineScript: |
+        export ARM_USE_OIDC=true
+        export ARM_CLIENT_ID=$servicePrincipalId
+        export ARM_TENANT_ID=$tenantId
+
+        terraform plan \
+          -var-file=${{ parameters.varFile }} \
+          -out=tfplan \
+          -input=false
+
+        # Generate plan summary for PR comment
+        terraform show -no-color tfplan > tfplan.txt
+
+  - task: PublishPipelineArtifact@1
+    displayName: 'Publish Terraform Plan Artifact'
+    condition: and(succeeded(), eq('${{ parameters.publishPlan }}', 'true'))
+    inputs:
+      targetPath: '${{ parameters.workingDirectory }}/tfplan'
+      artifactName: 'terraform-plan-$(environment)'
+
+  - script: |
+      if [ -n "$SYSTEM_PULLREQUEST_PULLREQUESTID" ]; then
+        PLAN_SUMMARY=$(cat tfplan.txt)
+        COMMENT="## Terraform Plan Summary\n\n\`\`\`\n${PLAN_SUMMARY}\n\`\`\`"
+
+        az devops configure --defaults organization=$(System.CollectionUri) project=$(System.TeamProject)
+        az repos pr comment create \
+          --id $SYSTEM_PULLREQUEST_PULLREQUESTID \
+          --content "$COMMENT" \
+          --output none
+      else
+        echo "Not a PR build, skipping plan comment"
+      fi
+    displayName: 'Post Plan Summary to PR'
+    condition: and(succeeded(), eq('${{ parameters.publishPlan }}', 'true'))
+    workingDirectory: '${{ parameters.workingDirectory }}'
+    env:
+      AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+    continueOnError: true

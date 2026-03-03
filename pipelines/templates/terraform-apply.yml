@@ -1,0 +1,49 @@
+parameters:
+  - name: workingDirectory
+    type: string
+  - name: serviceConnection
+    type: string
+  - name: environment
+    type: string
+
+jobs:
+  - deployment: TerraformApply
+    displayName: 'Terraform Apply - ${{ parameters.environment }}'
+    environment: '${{ parameters.environment }}'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - checkout: self
+
+            - task: TerraformInstaller@1
+              displayName: 'Install Terraform'
+              inputs:
+                terraformVersion: 'latest'
+
+            - task: DownloadPipelineArtifact@2
+              displayName: 'Download Terraform Plan'
+              inputs:
+                artifactName: 'terraform-plan-${{ parameters.environment }}'
+                targetPath: '${{ parameters.workingDirectory }}'
+
+            - task: AzureCLI@2
+              displayName: 'Terraform Apply'
+              inputs:
+                azureSubscription: '${{ parameters.serviceConnection }}'
+                scriptType: 'bash'
+                scriptLocation: 'inlineScript'
+                addSpnToEnvironment: true
+                useWorkloadIdentityFederation: true
+                workingDirectory: '${{ parameters.workingDirectory }}'
+                inlineScript: |
+                  export ARM_USE_OIDC=true
+                  export ARM_CLIENT_ID=$servicePrincipalId
+                  export ARM_TENANT_ID=$tenantId
+
+                  terraform init \
+                    -input=false
+
+                  terraform apply \
+                    -input=false \
+                    tfplan

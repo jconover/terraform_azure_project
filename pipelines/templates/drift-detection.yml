@@ -1,0 +1,49 @@
+parameters:
+  - name: workingDirectory
+    type: string
+  - name: varFile
+    type: string
+  - name: serviceConnection
+    type: string
+  - name: environment
+    type: string
+
+steps:
+  - task: AzureCLI@2
+    displayName: 'Terraform Plan - Drift Detection (${{ parameters.environment }})'
+    inputs:
+      azureSubscription: '${{ parameters.serviceConnection }}'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      addSpnToEnvironment: true
+      useWorkloadIdentityFederation: true
+      workingDirectory: '${{ parameters.workingDirectory }}'
+      inlineScript: |
+        export ARM_USE_OIDC=true
+        export ARM_CLIENT_ID=$servicePrincipalId
+        export ARM_TENANT_ID=$tenantId
+
+        terraform init -input=false
+
+        set +e
+        terraform plan \
+          -detailed-exitcode \
+          -var-file=${{ parameters.varFile }} \
+          -input=false \
+          -out=drift.tfplan
+        PLAN_EXIT_CODE=$?
+        set -e
+
+        if [ $PLAN_EXIT_CODE -eq 0 ]; then
+          echo "##[section]No drift detected in ${{ parameters.environment }}"
+          echo "##vso[task.setvariable variable=driftDetected;isOutput=true]false"
+        elif [ $PLAN_EXIT_CODE -eq 2 ]; then
+          echo "##[warning]Drift detected in ${{ parameters.environment }}!"
+          echo "##vso[task.setvariable variable=driftDetected;isOutput=true]true"
+          echo "##[section]Drift details:"
+          terraform show drift.tfplan -no-color
+        else
+          echo "##[error]Terraform plan failed with exit code $PLAN_EXIT_CODE"
+          exit 1
+        fi
+    name: driftCheck

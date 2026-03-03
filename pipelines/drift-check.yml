@@ -1,0 +1,56 @@
+trigger: none
+
+schedules:
+  - cron: '0 6 * * *'
+    displayName: 'Daily Drift Detection (6:00 AM UTC)'
+    branches:
+      include:
+        - main
+    always: true
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+name: 'Drift Detection'
+
+stages:
+  - stage: DevDriftCheck
+    displayName: 'Dev Drift Check'
+    jobs:
+      - job: DetectDrift
+        displayName: 'Detect Drift - Dev'
+        steps:
+          - template: templates/drift-detection.yml
+            parameters:
+              workingDirectory: '$(System.DefaultWorkingDirectory)/environments/dev'
+              varFile: 'terraform.tfvars'
+              serviceConnection: 'azure-dev'
+              environment: 'dev'
+
+  - stage: StagingDriftCheck
+    displayName: 'Staging Drift Check'
+    dependsOn: []
+    jobs:
+      - job: DetectDrift
+        displayName: 'Detect Drift - Staging'
+        steps:
+          - template: templates/drift-detection.yml
+            parameters:
+              workingDirectory: '$(System.DefaultWorkingDirectory)/environments/staging'
+              varFile: 'terraform.tfvars'
+              serviceConnection: 'azure-staging'
+              environment: 'staging'
+
+  - stage: ProdDriftCheck
+    displayName: 'Prod Drift Check'
+    dependsOn: []
+    jobs:
+      - job: DetectDrift
+        displayName: 'Detect Drift - Prod'
+        steps:
+          - template: templates/drift-detection.yml
+            parameters:
+              workingDirectory: '$(System.DefaultWorkingDirectory)/environments/prod'
+              varFile: 'terraform.tfvars'
+              serviceConnection: 'azure-prod'
+              environment: 'prod'

@@ -1,0 +1,216 @@
+# Module CI Pipeline
+# Validates Terraform modules on pull requests
+name: 'Module CI'
+
+trigger: none
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - modules/**
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+  # ---------------------------------------------------------------------------
+  # Stage 1: Validate all modules (fmt, init, validate, tflint)
+  # ---------------------------------------------------------------------------
+  - stage: Validate
+    displayName: 'Validate Modules'
+    jobs:
+      - job: ValidateModules
+        displayName: 'Validate All Modules'
+        steps:
+          - checkout: self
+
+          - task: TerraformInstaller@1
+            displayName: 'Install Terraform'
+            inputs:
+              terraformVersion: 'latest'
+
+          - script: |
+              curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+            displayName: 'Install tflint'
+            condition: succeeded()
+
+          - script: |
+              set -euo pipefail
+
+              FAILED=0
+              MODULES=$(find modules/ -maxdepth 1 -mindepth 1 -type d | sort)
+
+              for MODULE_DIR in $MODULES; do
+                MODULE_NAME=$(basename "$MODULE_DIR")
+                echo "============================================"
+                echo "Validating module: $MODULE_NAME"
+                echo "============================================"
+
+                # terraform fmt -check
+                echo "--- terraform fmt -check ---"
+                if ! terraform fmt -check "$MODULE_DIR"; then
+                  echo "##vso[task.logissue type=error]Module '$MODULE_NAME' has formatting issues"
+                  FAILED=1
+                fi
+
+                # terraform init -backend=false
+                echo "--- terraform init -backend=false ---"
+                if ! terraform -chdir="$MODULE_DIR" init -backend=false -input=false; then
+                  echo "##vso[task.logissue type=error]Module '$MODULE_NAME' failed init"
+                  FAILED=1
+                  continue
+                fi
+
+                # terraform validate
+                echo "--- terraform validate ---"
+                if ! terraform -chdir="$MODULE_DIR" validate; then
+                  echo "##vso[task.logissue type=error]Module '$MODULE_NAME' failed validation"
+                  FAILED=1
+                fi
+
+                # tflint (if .tflint.hcl exists at repo root)
+                if [ -f ".tflint.hcl" ]; then
+                  echo "--- tflint ---"
+                  if ! tflint --chdir="$MODULE_DIR" --config="$(pwd)/.tflint.hcl"; then
+                    echo "##vso[task.logissue type=error]Module '$MODULE_NAME' has tflint issues"
+                    FAILED=1
+                  fi
+                fi
+
+                echo ""
+              done
+
+              if [ "$FAILED" -ne 0 ]; then
+                echo "##vso[task.complete result=Failed;]One or more modules failed validation"
+                exit 1
+              fi
+
+              echo "All modules passed validation"
+            displayName: 'Validate All Modules'
+
+  # ---------------------------------------------------------------------------
+  # Stage 2: Run terraform test for modules with test files
+  # ---------------------------------------------------------------------------
+  - stage: Test
+    displayName: 'Test Modules'
+    dependsOn: Validate
+    jobs:
+      - job: TestModules
+        displayName: 'Run Module Tests'
+        steps:
+          - checkout: self
+
+          - task: TerraformInstaller@1
+            displayName: 'Install Terraform'
+            inputs:
+              terraformVersion: 'latest'
+
+          - script: |
+              set -euo pipefail
+
+              FAILED=0
+              TESTED=0
+              MODULES=$(find modules/ -maxdepth 1 -mindepth 1 -type d | sort)
+
+              for MODULE_DIR in $MODULES; do
+                MODULE_NAME=$(basename "$MODULE_DIR")
+
+                # Check for test files
+                TEST_FILES=$(find "$MODULE_DIR" -name '*.tftest.hcl' 2>/dev/null)
+                if [ -z "$TEST_FILES" ]; then
+                  echo "Skipping module '$MODULE_NAME' (no test files)"
+                  continue
+                fi
+
+                echo "============================================"
+                echo "Testing module: $MODULE_NAME"
+                echo "============================================"
+                TESTED=$((TESTED + 1))
+
+                if ! terraform -chdir="$MODULE_DIR" init -backend=false -input=false; then
+                  echo "##vso[task.logissue type=error]Module '$MODULE_NAME' failed init for testing"
+                  FAILED=1
+                  continue
+                fi
+
+                if ! terraform -chdir="$MODULE_DIR" test; then
+                  echo "##vso[task.logissue type=error]Module '$MODULE_NAME' tests failed"
+                  FAILED=1
+                fi
+
+                echo ""
+              done
+
+              if [ "$TESTED" -eq 0 ]; then
+                echo "No modules have test files — skipping test stage"
+                exit 0
+              fi
+
+              if [ "$FAILED" -ne 0 ]; then
+                echo "##vso[task.complete result=Failed;]One or more module tests failed"
+                exit 1
+              fi
+
+              echo "All module tests passed ($TESTED modules tested)"
+            displayName: 'Run Terraform Tests'
+
+  # ---------------------------------------------------------------------------
+  # Stage 3: Check that terraform-docs output is up to date
+  # ---------------------------------------------------------------------------
+  - stage: DocsCheck
+    displayName: 'Docs Check'
+    dependsOn: Validate
+    jobs:
+      - job: CheckDocs
+        displayName: 'Verify terraform-docs'
+        steps:
+          - checkout: self
+
+          - script: |
+              curl -sSLo terraform-docs.tar.gz \
+                https://terraform-docs.io/dl/v0.18.0/terraform-docs-v0.18.0-linux-amd64.tar.gz
+              tar -xzf terraform-docs.tar.gz terraform-docs
+              chmod +x terraform-docs
+              sudo mv terraform-docs /usr/local/bin/
+              rm -f terraform-docs.tar.gz
+            displayName: 'Install terraform-docs'
+
+          - script: |
+              set -euo pipefail
+
+              STALE=0
+              MODULES=$(find modules/ -maxdepth 1 -mindepth 1 -type d | sort)
+
+              for MODULE_DIR in $MODULES; do
+                MODULE_NAME=$(basename "$MODULE_DIR")
+                README="$MODULE_DIR/README.md"
+
+                if [ ! -f "$README" ]; then
+                  echo "Warning: No README.md for module '$MODULE_NAME'"
+                  continue
+                fi
+
+                echo "Checking docs for module: $MODULE_NAME"
+
+                # Generate expected docs and compare
+                EXPECTED=$(terraform-docs markdown table "$MODULE_DIR")
+                ACTUAL=$(cat "$README")
+
+                if [ "$EXPECTED" != "$ACTUAL" ]; then
+                  echo "##vso[task.logissue type=error]Module '$MODULE_NAME' has stale README.md — run terraform-docs to update"
+                  echo "--- Diff ---"
+                  diff <(echo "$ACTUAL") <(echo "$EXPECTED") || true
+                  STALE=1
+                fi
+              done
+
+              if [ "$STALE" -ne 0 ]; then
+                echo "##vso[task.complete result=Failed;]One or more modules have stale documentation"
+                exit 1
+              fi
+
+              echo "All module docs are up to date"
+            displayName: 'Check terraform-docs Freshness'

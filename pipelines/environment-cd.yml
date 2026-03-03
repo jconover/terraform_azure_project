@@ -1,0 +1,283 @@
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - environments/**
+      - modules/**
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+name: 'Environment CD'
+
+variables:
+  terraformVersion: '1.6.0'
+  serviceConnection: 'azure-terraform-oidc'
+  backendResourceGroup: 'rg-terraform-state'
+  backendStorageAccount: 'stterraformstate'
+
+stages:
+  # ──────────────────────────────────────────────
+  # Stage 1: Dev (auto-approval)
+  # ──────────────────────────────────────────────
+  - stage: Dev
+    displayName: 'Deploy to Dev'
+    jobs:
+      - job: Plan
+        displayName: 'Terraform Plan (Dev)'
+        steps:
+          - task: TerraformInstaller@1
+            displayName: 'Install Terraform'
+            inputs:
+              terraformVersion: $(terraformVersion)
+
+          - task: AzureCLI@2
+            displayName: 'Terraform Init & Plan'
+            inputs:
+              azureSubscription: $(serviceConnection)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              addSpnToEnvironment: true
+              useWorkloadIdentityFederation: true
+              workingDirectory: '$(System.DefaultWorkingDirectory)/environments/dev'
+              inlineScript: |
+                export ARM_USE_OIDC=true
+                export ARM_CLIENT_ID=$servicePrincipalId
+                export ARM_TENANT_ID=$tenantId
+
+                terraform init \
+                  -backend-config="resource_group_name=$(backendResourceGroup)" \
+                  -backend-config="storage_account_name=$(backendStorageAccount)" \
+                  -backend-config="container_name=tfstate" \
+                  -backend-config="key=dev.tfstate" \
+                  -input=false
+
+                terraform plan \
+                  -var-file=dev.tfvars \
+                  -out=tfplan \
+                  -input=false
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Plan Artifact'
+            inputs:
+              targetPath: '$(System.DefaultWorkingDirectory)/environments/dev/tfplan'
+              artifactName: 'dev-plan'
+
+      - deployment: Apply
+        displayName: 'Terraform Apply (Dev)'
+        dependsOn: Plan
+        environment: 'dev'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: 'dev-plan'
+                  displayName: 'Download Plan Artifact'
+
+                - task: TerraformInstaller@1
+                  displayName: 'Install Terraform'
+                  inputs:
+                    terraformVersion: $(terraformVersion)
+
+                - task: AzureCLI@2
+                  displayName: 'Terraform Init & Apply'
+                  inputs:
+                    azureSubscription: $(serviceConnection)
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    addSpnToEnvironment: true
+                    useWorkloadIdentityFederation: true
+                    workingDirectory: '$(System.DefaultWorkingDirectory)/environments/dev'
+                    inlineScript: |
+                      export ARM_USE_OIDC=true
+                      export ARM_CLIENT_ID=$servicePrincipalId
+                      export ARM_TENANT_ID=$tenantId
+
+                      terraform init \
+                        -backend-config="resource_group_name=$(backendResourceGroup)" \
+                        -backend-config="storage_account_name=$(backendStorageAccount)" \
+                        -backend-config="container_name=tfstate" \
+                        -backend-config="key=dev.tfstate" \
+                        -input=false
+
+                      terraform apply \
+                        $(Pipeline.Workspace)/dev-plan/tfplan
+
+  # ──────────────────────────────────────────────
+  # Stage 2: Staging (manual approval gate)
+  # ──────────────────────────────────────────────
+  - stage: Staging
+    displayName: 'Deploy to Staging'
+    dependsOn: Dev
+    jobs:
+      - job: Plan
+        displayName: 'Terraform Plan (Staging)'
+        steps:
+          - task: TerraformInstaller@1
+            displayName: 'Install Terraform'
+            inputs:
+              terraformVersion: $(terraformVersion)
+
+          - task: AzureCLI@2
+            displayName: 'Terraform Init & Plan'
+            inputs:
+              azureSubscription: $(serviceConnection)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              addSpnToEnvironment: true
+              useWorkloadIdentityFederation: true
+              workingDirectory: '$(System.DefaultWorkingDirectory)/environments/staging'
+              inlineScript: |
+                export ARM_USE_OIDC=true
+                export ARM_CLIENT_ID=$servicePrincipalId
+                export ARM_TENANT_ID=$tenantId
+
+                terraform init \
+                  -backend-config="resource_group_name=$(backendResourceGroup)" \
+                  -backend-config="storage_account_name=$(backendStorageAccount)" \
+                  -backend-config="container_name=tfstate" \
+                  -backend-config="key=staging.tfstate" \
+                  -input=false
+
+                terraform plan \
+                  -var-file=staging.tfvars \
+                  -out=tfplan \
+                  -input=false
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Plan Artifact'
+            inputs:
+              targetPath: '$(System.DefaultWorkingDirectory)/environments/staging/tfplan'
+              artifactName: 'staging-plan'
+
+      - deployment: Apply
+        displayName: 'Terraform Apply (Staging)'
+        dependsOn: Plan
+        environment: 'staging'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: 'staging-plan'
+                  displayName: 'Download Plan Artifact'
+
+                - task: TerraformInstaller@1
+                  displayName: 'Install Terraform'
+                  inputs:
+                    terraformVersion: $(terraformVersion)
+
+                - task: AzureCLI@2
+                  displayName: 'Terraform Init & Apply'
+                  inputs:
+                    azureSubscription: $(serviceConnection)
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    addSpnToEnvironment: true
+                    useWorkloadIdentityFederation: true
+                    workingDirectory: '$(System.DefaultWorkingDirectory)/environments/staging'
+                    inlineScript: |
+                      export ARM_USE_OIDC=true
+                      export ARM_CLIENT_ID=$servicePrincipalId
+                      export ARM_TENANT_ID=$tenantId
+
+                      terraform init \
+                        -backend-config="resource_group_name=$(backendResourceGroup)" \
+                        -backend-config="storage_account_name=$(backendStorageAccount)" \
+                        -backend-config="container_name=tfstate" \
+                        -backend-config="key=staging.tfstate" \
+                        -input=false
+
+                      terraform apply \
+                        $(Pipeline.Workspace)/staging-plan/tfplan
+
+  # ──────────────────────────────────────────────
+  # Stage 3: Prod (2-approver gate)
+  # ──────────────────────────────────────────────
+  - stage: Prod
+    displayName: 'Deploy to Production'
+    dependsOn: Staging
+    jobs:
+      - job: Plan
+        displayName: 'Terraform Plan (Prod)'
+        steps:
+          - task: TerraformInstaller@1
+            displayName: 'Install Terraform'
+            inputs:
+              terraformVersion: $(terraformVersion)
+
+          - task: AzureCLI@2
+            displayName: 'Terraform Init & Plan'
+            inputs:
+              azureSubscription: $(serviceConnection)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              addSpnToEnvironment: true
+              useWorkloadIdentityFederation: true
+              workingDirectory: '$(System.DefaultWorkingDirectory)/environments/prod'
+              inlineScript: |
+                export ARM_USE_OIDC=true
+                export ARM_CLIENT_ID=$servicePrincipalId
+                export ARM_TENANT_ID=$tenantId
+
+                terraform init \
+                  -backend-config="resource_group_name=$(backendResourceGroup)" \
+                  -backend-config="storage_account_name=$(backendStorageAccount)" \
+                  -backend-config="container_name=tfstate" \
+                  -backend-config="key=prod.tfstate" \
+                  -input=false
+
+                terraform plan \
+                  -var-file=prod.tfvars \
+                  -out=tfplan \
+                  -input=false
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Plan Artifact'
+            inputs:
+              targetPath: '$(System.DefaultWorkingDirectory)/environments/prod/tfplan'
+              artifactName: 'prod-plan'
+
+      - deployment: Apply
+        displayName: 'Terraform Apply (Prod)'
+        dependsOn: Plan
+        environment: 'prod'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: 'prod-plan'
+                  displayName: 'Download Plan Artifact'
+
+                - task: TerraformInstaller@1
+                  displayName: 'Install Terraform'
+                  inputs:
+                    terraformVersion: $(terraformVersion)
+
+                - task: AzureCLI@2
+                  displayName: 'Terraform Init & Apply'
+                  inputs:
+                    azureSubscription: $(serviceConnection)
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    addSpnToEnvironment: true
+                    useWorkloadIdentityFederation: true
+                    workingDirectory: '$(System.DefaultWorkingDirectory)/environments/prod'
+                    inlineScript: |
+                      export ARM_USE_OIDC=true
+                      export ARM_CLIENT_ID=$servicePrincipalId
+                      export ARM_TENANT_ID=$tenantId
+
+                      terraform init \
+                        -backend-config="resource_group_name=$(backendResourceGroup)" \
+                        -backend-config="storage_account_name=$(backendStorageAccount)" \
+                        -backend-config="container_name=tfstate" \
+                        -backend-config="key=prod.tfstate" \
+                        -input=false
+
+                      terraform apply \
+                        $(Pipeline.Workspace)/prod-plan/tfplan

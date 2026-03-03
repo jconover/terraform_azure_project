@@ -1,0 +1,48 @@
+parameters:
+  - name: workingDirectory
+    type: string
+  - name: backendServiceConnection
+    type: string
+  - name: backendResourceGroup
+    type: string
+  - name: backendStorageAccount
+    type: string
+  - name: backendContainer
+    type: string
+    default: 'tfstate'
+  - name: backendKey
+    type: string
+
+steps:
+  - task: TerraformInstaller@1
+    displayName: 'Install Terraform'
+    inputs:
+      terraformVersion: 'latest'
+
+  - task: AzureCLI@2
+    displayName: 'Terraform Init'
+    inputs:
+      azureSubscription: '${{ parameters.backendServiceConnection }}'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      addSpnToEnvironment: true
+      useWorkloadIdentityFederation: true
+      workingDirectory: '${{ parameters.workingDirectory }}'
+      inlineScript: |
+        export ARM_USE_OIDC=true
+        export ARM_CLIENT_ID=$servicePrincipalId
+        export ARM_TENANT_ID=$tenantId
+
+        terraform init \
+          -backend-config="resource_group_name=${{ parameters.backendResourceGroup }}" \
+          -backend-config="storage_account_name=${{ parameters.backendStorageAccount }}" \
+          -backend-config="container_name=${{ parameters.backendContainer }}" \
+          -backend-config="key=${{ parameters.backendKey }}" \
+          -input=false
+
+  - task: Cache@2
+    displayName: 'Cache .terraform directory'
+    inputs:
+      key: 'terraform | "${{ parameters.workingDirectory }}" | "${{ parameters.backendKey }}"'
+      path: '${{ parameters.workingDirectory }}/.terraform'
+      cacheHitVar: 'TERRAFORM_CACHE_HIT'
