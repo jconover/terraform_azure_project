@@ -73,19 +73,19 @@ terraform_azure_project/
 | Module | Description | Status |
 |--------|-------------|--------|
 | `naming` | Azure-compliant resource name generation | Available |
-| `resource-group` | Resource group with standard tags | Planned |
-| `virtual-network` | VNet with configurable address space | Planned |
-| `subnet` | Subnets with delegation and service endpoints | Planned |
-| `network-security-group` | NSG with configurable rules | Planned |
-| `private-endpoint` | Generic private endpoint with DNS | Planned |
-| `key-vault` | Key Vault with RBAC mode | Planned |
-| `log-analytics` | Log Analytics workspace | Planned |
-| `managed-identity` | User/system-assigned managed identity | Planned |
-| `rbac-assignment` | Role assignments with least-privilege | Planned |
-| `storage-account` | Storage with private endpoints and lifecycle | Planned |
-| `aks-cluster` | AKS with managed identity and autoscaling | Planned |
-| `fabric-capacity` | Microsoft Fabric capacity provisioning | Planned |
-| `azure-policy` | Policy definitions and assignments | Planned |
+| `resource-group` | Resource group with standard tags | Available |
+| `virtual-network` | VNet with configurable address space | Available |
+| `subnet` | Subnets with delegation and service endpoints | Available |
+| `network-security-group` | NSG with configurable rules | Available |
+| `private-endpoint` | Generic private endpoint with DNS | Available |
+| `key-vault` | Key Vault with RBAC mode | Available |
+| `log-analytics` | Log Analytics workspace | Available |
+| `managed-identity` | User/system-assigned managed identity | Available |
+| `rbac-assignment` | Role assignments with least-privilege | Available |
+| `storage-account` | Storage with private endpoints and lifecycle | Available |
+| `aks-cluster` | AKS with managed identity and autoscaling | Available |
+| `fabric-capacity` | Microsoft Fabric capacity provisioning | Available |
+| `azure-policy` | Policy definitions and assignments | Available |
 
 ## CI/CD
 
@@ -94,6 +94,26 @@ Pipelines target **Azure DevOps** with workload identity federation (OIDC):
 - **Module CI**: Validates modules on PR (fmt, validate, lint, test)
 - **Environment CD**: Deploys on merge (plan -> approval -> apply)
 - **Drift Detection**: Scheduled daily checks
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [Onboarding Guide](docs/onboarding.md) | First-day setup, authentication, and first plan/apply walkthrough |
+| [Contributing Guide](docs/contributing.md) | Branch strategy, PR checklist, coding standards, and review process |
+| [Module Usage Guide](docs/module-usage-guide.md) | Practical examples consuming each module from environment roots |
+| [Module Development Guide](docs/module-development.md) | Standards and patterns for authoring new modules |
+| [CI/CD Guide](docs/ci-cd-guide.md) | Azure DevOps pipeline stages, OIDC setup, and approval gates |
+| [Security Guide](docs/security-guide.md) | RBAC, Key Vault access, private endpoints, CMK, and policy guardrails |
+| [Network Architecture](docs/network-architecture.md) | Reference topology: VNet, subnet, NSG, and private endpoint design |
+| [Cost Management](docs/cost-management.md) | Infracost usage, tagging for cost allocation, and budget alerts |
+| [Troubleshooting Guide](docs/troubleshooting.md) | Common errors, root causes, and remediation steps |
+| [Migration Guide](docs/migration-guide.md) | Migrating existing Bicep deployments to Terraform modules |
+| [Runbook: AKS Scaling](docs/runbooks/aks-scaling.md) | Scale AKS node pools, drain/cordon procedures |
+| [Runbook: State Recovery](docs/runbooks/state-recovery.md) | Recover from corrupted or lost Terraform remote state |
+| [Runbook: Drift Remediation](docs/runbooks/drift-remediation.md) | Investigate and resolve configuration drift |
+| [Runbook: Secret Rotation](docs/runbooks/secret-rotation.md) | Rotate Key Vault secrets and credentials with zero downtime |
+| [Runbook: Disaster Recovery](docs/runbooks/disaster-recovery.md) | Region failover, state restoration, and environment re-provisioning |
 
 ## Key Design Decisions
 

@@ -95,3 +95,32 @@ Feature Branch → PR → Module CI (validate + lint + test)
 | Network | Private endpoints for Storage/Key Vault; NSGs on all subnets |
 | Policy | Azure Policy enforces tagging, HTTPS, public access restrictions |
 | State | Encrypted at rest, locked during operations, soft-delete enabled |
+
+## Documentation
+
+All project documentation lives under `docs/`. The files are organised into guides for day-to-day use and runbooks for operational response.
+
+### Guides
+
+| File | Purpose |
+|------|---------|
+| `docs/guides/onboarding.md` | Getting started for new team members |
+| `docs/guides/contributing.md` | Contribution workflow, branch strategy, PR standards |
+| `docs/guides/module-usage.md` | How to consume published modules in an environment |
+| `docs/guides/module-development.md` | Authoring new modules: layout, variables, outputs, tests |
+| `docs/guides/ci-cd.md` | Pipeline architecture, workflow triggers, approval gates |
+| `docs/guides/security.md` | Security controls, RBAC model, Key Vault access patterns |
+| `docs/guides/network-architecture.md` | VNet design, subnet allocation, private endpoint strategy |
+| `docs/guides/cost-management.md` | Tagging taxonomy, budget alerts, cost allocation |
+| `docs/guides/troubleshooting.md` | Common errors, diagnostic queries, support escalation |
+| `docs/guides/migration.md` | Importing existing resources, state migration procedures |
+
+### Runbooks
+
+| File | Purpose |
+|------|---------|
+| `docs/runbooks/aks-scaling.md` | Scaling AKS node pools up and down safely |
+| `docs/runbooks/state-recovery.md` | Recovering from a corrupted or locked Terraform state |
+| `docs/runbooks/drift-remediation.md` | Detecting and reconciling infrastructure drift |
+| `docs/runbooks/secret-rotation.md` | Rotating Key Vault secrets and updating dependent resources |
+| `docs/runbooks/disaster-recovery.md` | Full environment recovery from backup state and snapshots |
