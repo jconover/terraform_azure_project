@@ -28,6 +28,10 @@ Thumbs.db
 *.key
 .env
 *.auto.tfvars
+environments/*/dev.tfvars
+environments/*/staging.tfvars
+environments/*/prod.tfvars
+!environments/*/*.tfvars.example
 
 # Claude Code
 .claude/

@@ -1,0 +1,10 @@
+# Dev environment configuration
+# Usage: cp dev.tfvars.example dev.tfvars && edit dev.tfvars
+# Then: terraform plan -var-file=dev.tfvars
+
+subscription_id = "00000000-0000-0000-0000-000000000000" # az account show --query id -o tsv
+project         = "platform"
+environment     = "dev"
+location        = "eastus2"
+owner           = "platform-team"
+cost_center     = "infrastructure"
