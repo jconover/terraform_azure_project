@@ -38,7 +38,7 @@ resource "azurerm_network_security_group" "this" {
 }
 
 resource "azurerm_monitor_diagnostic_setting" "this" {
-  count = var.log_analytics_workspace_id != "" ? 1 : 0
+  count = var.enable_diagnostics ? 1 : 0
 
   name                       = "${var.name}-diag"
   target_resource_id         = azurerm_network_security_group.this.id

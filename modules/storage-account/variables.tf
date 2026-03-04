@@ -155,10 +155,16 @@ variable "cmk_user_assigned_identity_id" {
   default     = ""
 }
 
+variable "enable_diagnostics" {
+  description = "Whether to create diagnostic settings. Use this instead of checking log_analytics_workspace_id to avoid unknown-value issues at plan time."
+  type        = bool
+  default     = false
+}
+
 variable "log_analytics_workspace_id" {
-  description = "Log Analytics workspace ID for diagnostic settings. Leave empty to disable diagnostics."
+  description = "Log Analytics workspace ID for diagnostic settings. Required when enable_diagnostics is true."
   type        = string
-  default     = ""
+  default     = null
 }
 
 variable "tags" {

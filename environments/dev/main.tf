@@ -51,6 +51,7 @@ module "foundation_vnet" {
   resource_group_name        = module.foundation_rg.name
   location                   = var.location
   address_space              = var.vnet_address_space
+  enable_diagnostics         = true
   log_analytics_workspace_id = module.foundation_law.id
   tags                       = local.common_tags
 }
@@ -61,6 +62,7 @@ module "foundation_nsg" {
   name                       = module.naming.network_security_group
   resource_group_name        = module.foundation_rg.name
   location                   = var.location
+  enable_diagnostics         = true
   log_analytics_workspace_id = module.foundation_law.id
   tags                       = local.common_tags
   security_rules             = []
@@ -73,6 +75,7 @@ module "foundation_subnet" {
   resource_group_name       = module.foundation_rg.name
   virtual_network_name      = module.foundation_vnet.name
   address_prefixes          = var.subnet_address_prefixes
+  enable_nsg_association    = true
   network_security_group_id = module.foundation_nsg.id
   service_endpoints         = ["Microsoft.KeyVault", "Microsoft.Storage"]
 }
@@ -85,11 +88,12 @@ module "foundation_kv" {
   location                      = var.location
   tenant_id                     = data.azurerm_client_config.current.tenant_id
   sku_name                      = "standard"
-  enable_rbac_authorization     = true
+  rbac_authorization_enabled    = true
   purge_protection_enabled      = false
   soft_delete_retention_days    = 7
   public_network_access_enabled = true
   network_acls_default_action   = "Allow"
+  enable_diagnostics            = true
   log_analytics_workspace_id    = module.foundation_law.id
   tags                          = local.common_tags
 }
@@ -105,6 +109,7 @@ module "foundation_storage" {
   public_network_access_enabled = true
   shared_access_key_enabled     = true
   network_rules_default_action  = "Allow"
+  enable_diagnostics            = true
   log_analytics_workspace_id    = module.foundation_law.id
   tags                          = local.common_tags
 }

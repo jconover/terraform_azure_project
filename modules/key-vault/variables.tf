@@ -34,7 +34,7 @@ variable "tenant_id" {
   type        = string
 }
 
-variable "enable_rbac_authorization" {
+variable "rbac_authorization_enabled" {
   description = "Enable RBAC authorization for the Key Vault (recommended over access policies)"
   type        = bool
   default     = true
@@ -87,8 +87,14 @@ variable "tags" {
   default     = {}
 }
 
+variable "enable_diagnostics" {
+  description = "Whether to create diagnostic settings. Use this instead of checking log_analytics_workspace_id to avoid unknown-value issues at plan time."
+  type        = bool
+  default     = false
+}
+
 variable "log_analytics_workspace_id" {
-  description = "Log Analytics workspace ID for diagnostic settings. Leave empty to disable diagnostics."
+  description = "Log Analytics workspace ID for diagnostic settings. Required when enable_diagnostics is true."
   type        = string
-  default     = ""
+  default     = null
 }

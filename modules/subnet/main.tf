@@ -19,7 +19,7 @@ resource "azurerm_subnet" "this" {
 }
 
 resource "azurerm_subnet_network_security_group_association" "this" {
-  count = var.network_security_group_id != "" ? 1 : 0
+  count = var.enable_nsg_association ? 1 : 0
 
   subnet_id                 = azurerm_subnet.this.id
   network_security_group_id = var.network_security_group_id

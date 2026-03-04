@@ -5,7 +5,9 @@
 # ---------------------------------------------------------------------------
 # Shared mock provider — avoids real Azure API calls in every run block
 # ---------------------------------------------------------------------------
-mock_provider "azurerm" {}
+provider "azurerm" {
+  features {}
+}
 
 # ---------------------------------------------------------------------------
 # Test 1 — Basic NSG creation (name, location, resource group, tags)
@@ -188,12 +190,13 @@ run "diagnostic_settings_created" {
     name                       = "nsg-diag"
     resource_group_name        = "rg-test"
     location                   = "eastus"
+    enable_diagnostics         = true
     log_analytics_workspace_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.OperationalInsights/workspaces/law-test"
   }
 
   assert {
     condition     = length(azurerm_monitor_diagnostic_setting.this) == 1
-    error_message = "Exactly one diagnostic setting should be created when a Log Analytics workspace ID is provided."
+    error_message = "Exactly one diagnostic setting should be created when enable_diagnostics is true."
   }
 
   assert {
@@ -208,22 +211,21 @@ run "diagnostic_settings_created" {
 }
 
 # ---------------------------------------------------------------------------
-# Test 5 — Diagnostic setting NOT created when log_analytics_workspace_id
-#           is the default empty string
+# Test 5 — Diagnostic setting NOT created when enable_diagnostics is false
+#           (default)
 # ---------------------------------------------------------------------------
 run "diagnostic_settings_not_created" {
   command = plan
 
   variables {
-    name                       = "nsg-no-diag"
-    resource_group_name        = "rg-test"
-    location                   = "eastus"
-    log_analytics_workspace_id = ""
+    name                = "nsg-no-diag"
+    resource_group_name = "rg-test"
+    location            = "eastus"
   }
 
   assert {
     condition     = length(azurerm_monitor_diagnostic_setting.this) == 0
-    error_message = "No diagnostic setting should be created when log_analytics_workspace_id is an empty string."
+    error_message = "No diagnostic setting should be created when enable_diagnostics is false."
   }
 }
 

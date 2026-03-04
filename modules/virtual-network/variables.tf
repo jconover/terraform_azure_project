@@ -35,8 +35,14 @@ variable "tags" {
   default     = {}
 }
 
+variable "enable_diagnostics" {
+  description = "Whether to create diagnostic settings. Use this instead of checking log_analytics_workspace_id to avoid unknown-value issues at plan time."
+  type        = bool
+  default     = false
+}
+
 variable "log_analytics_workspace_id" {
-  description = "Log Analytics Workspace ID for diagnostic settings. If empty, diagnostic settings are not created."
+  description = "Log Analytics Workspace ID for diagnostic settings. Required when enable_diagnostics is true."
   type        = string
-  default     = ""
+  default     = null
 }

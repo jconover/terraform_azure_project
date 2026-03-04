@@ -36,10 +36,16 @@ variable "service_endpoints" {
   default     = []
 }
 
+variable "enable_nsg_association" {
+  description = "Whether to associate an NSG with the subnet. Use this instead of checking network_security_group_id to avoid unknown-value issues at plan time."
+  type        = bool
+  default     = false
+}
+
 variable "network_security_group_id" {
-  description = "ID of the network security group to associate with the subnet"
+  description = "ID of the network security group to associate with the subnet. Required when enable_nsg_association is true."
   type        = string
-  default     = ""
+  default     = null
 }
 
 variable "private_endpoint_network_policies" {
