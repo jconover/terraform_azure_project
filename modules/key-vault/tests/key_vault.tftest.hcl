@@ -63,7 +63,7 @@ run "rbac_authorization_enabled_by_default" {
   }
 
   assert {
-    condition     = azurerm_key_vault.this.enable_rbac_authorization == true
+    condition     = azurerm_key_vault.this.rbac_authorization_enabled == true
     error_message = "RBAC authorization must be enabled by default."
   }
 }
@@ -76,11 +76,11 @@ run "rbac_authorization_explicit_disable" {
     resource_group_name       = "rg-test"
     location                  = "eastus"
     tenant_id                 = "00000000-0000-0000-0000-000000000000"
-    enable_rbac_authorization = false
+    rbac_authorization_enabled = false
   }
 
   assert {
-    condition     = azurerm_key_vault.this.enable_rbac_authorization == false
+    condition     = azurerm_key_vault.this.rbac_authorization_enabled == false
     error_message = "RBAC authorization must be disabled when explicitly set to false."
   }
 }
@@ -240,12 +240,12 @@ run "diagnostic_settings_skipped_when_empty" {
     resource_group_name        = "rg-test"
     location                   = "eastus"
     tenant_id                  = "00000000-0000-0000-0000-000000000000"
-    log_analytics_workspace_id = ""
+    log_analytics_workspace_id = null
   }
 
   assert {
     condition     = length(azurerm_monitor_diagnostic_setting.this) == 0
-    error_message = "Diagnostic setting must not be created when log_analytics_workspace_id is empty."
+    error_message = "Diagnostic setting must not be created when log_analytics_workspace_id is null."
   }
 }
 

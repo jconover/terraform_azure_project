@@ -4,7 +4,7 @@ resource "azurerm_key_vault" "this" {
   resource_group_name           = var.resource_group_name
   tenant_id                     = var.tenant_id
   sku_name                      = var.sku_name
-  enable_rbac_authorization     = var.enable_rbac_authorization
+  rbac_authorization_enabled    = var.rbac_authorization_enabled
   purge_protection_enabled      = var.purge_protection_enabled
   soft_delete_retention_days    = var.soft_delete_retention_days
   public_network_access_enabled = var.public_network_access_enabled
@@ -19,7 +19,7 @@ resource "azurerm_key_vault" "this" {
 }
 
 resource "azurerm_monitor_diagnostic_setting" "this" {
-  count = var.log_analytics_workspace_id != "" ? 1 : 0
+  count = var.enable_diagnostics ? 1 : 0
 
   name                       = "${var.name}-diag"
   target_resource_id         = azurerm_key_vault.this.id

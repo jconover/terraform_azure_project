@@ -5,7 +5,9 @@
 # ---------------------------------------------------------------------------
 # Shared mock provider — avoids real Azure API calls in every run block
 # ---------------------------------------------------------------------------
-mock_provider "azurerm" {}
+provider "azurerm" {
+  features {}
+}
 
 # ---------------------------------------------------------------------------
 # Test 1 — Basic subnet creation with an address prefix
@@ -189,12 +191,13 @@ run "nsg_association_created" {
     resource_group_name       = "rg-test"
     virtual_network_name      = "vnet-test"
     address_prefixes          = ["10.0.8.0/24"]
+    enable_nsg_association    = true
     network_security_group_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/networkSecurityGroups/nsg-test"
   }
 
   assert {
     condition     = length(azurerm_subnet_network_security_group_association.this) == 1
-    error_message = "Exactly one NSG association resource should be created when a network_security_group_id is provided."
+    error_message = "Exactly one NSG association resource should be created when enable_nsg_association is true."
   }
 
   assert {
@@ -204,21 +207,20 @@ run "nsg_association_created" {
 }
 
 # ---------------------------------------------------------------------------
-# Test 8 — No NSG association when network_security_group_id is empty string
+# Test 8 — No NSG association when enable_nsg_association is false (default)
 # ---------------------------------------------------------------------------
-run "nsg_association_not_created_for_empty_id" {
+run "nsg_association_not_created_when_disabled" {
   command = plan
 
   variables {
-    name                      = "snet-no-nsg"
-    resource_group_name       = "rg-test"
-    virtual_network_name      = "vnet-test"
-    address_prefixes          = ["10.0.9.0/24"]
-    network_security_group_id = ""
+    name                 = "snet-no-nsg"
+    resource_group_name  = "rg-test"
+    virtual_network_name = "vnet-test"
+    address_prefixes     = ["10.0.9.0/24"]
   }
 
   assert {
     condition     = length(azurerm_subnet_network_security_group_association.this) == 0
-    error_message = "No NSG association should be created when network_security_group_id is an empty string."
+    error_message = "No NSG association should be created when enable_nsg_association is false."
   }
 }

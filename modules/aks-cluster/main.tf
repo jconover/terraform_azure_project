@@ -56,7 +56,7 @@ resource "azurerm_kubernetes_cluster" "this" {
   }
 
   dynamic "oms_agent" {
-    for_each = var.log_analytics_workspace_id != "" ? [1] : []
+    for_each = var.enable_diagnostics ? [1] : []
     content {
       log_analytics_workspace_id = var.log_analytics_workspace_id
     }
@@ -85,7 +85,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
 }
 
 resource "azurerm_monitor_diagnostic_setting" "this" {
-  count = var.log_analytics_workspace_id != "" ? 1 : 0
+  count = var.enable_diagnostics ? 1 : 0
 
   name                       = "${var.name}-diag"
   target_resource_id         = azurerm_kubernetes_cluster.this.id
