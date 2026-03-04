@@ -1,3 +1,14 @@
+terraform {
+  required_version = ">= 1.6.0"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+  }
+}
+
 module "key_vault" {
   source = "../../"
 
@@ -13,6 +24,7 @@ module "key_vault" {
 }
 
 output "key_vault" {
+  description = "Key attributes of the deployed Azure Key Vault including its ID, name, and URI."
   value = {
     id        = module.key_vault.id
     name      = module.key_vault.name

@@ -22,7 +22,7 @@ run "basic_policy_definition_creation" {
         display_name = "Deny Public IP Creation"
         description  = "Prevents the creation of public IP addresses."
         mode         = "All"
-        policy_rule  = jsonencode({
+        policy_rule = jsonencode({
           if = {
             field  = "type"
             equals = "Microsoft.Network/publicIPAddresses"
@@ -192,7 +192,7 @@ run "policy_metadata_and_description" {
         display_name = "Require Resource Tags"
         description  = "Requires that all resources have the specified tags applied."
         mode         = "Indexed"
-        policy_rule  = jsonencode({
+        policy_rule = jsonencode({
           if = {
             field  = "tags"
             exists = "false"
@@ -241,7 +241,7 @@ run "policy_definition_default_mode" {
     policy_definitions = {
       "no-mode-specified" = {
         display_name = "Policy Without Explicit Mode"
-        policy_rule  = jsonencode({
+        policy_rule = jsonencode({
           if = {
             field  = "type"
             equals = "Microsoft.Compute/virtualMachines"
@@ -277,7 +277,7 @@ run "policy_definition_null_metadata_when_omitted" {
     policy_definitions = {
       "no-metadata" = {
         display_name = "Policy Without Metadata"
-        policy_rule  = jsonencode({
+        policy_rule = jsonencode({
           if = {
             field  = "type"
             equals = "Microsoft.Storage/storageAccounts"

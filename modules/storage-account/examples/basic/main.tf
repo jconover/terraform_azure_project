@@ -1,3 +1,14 @@
+terraform {
+  required_version = ">= 1.6.0"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+  }
+}
+
 module "storage_account" {
   source = "../../"
 
@@ -31,6 +42,7 @@ module "storage_account" {
 }
 
 output "storage_account" {
+  description = "Key attributes of the deployed storage account including its ID, name, and primary blob endpoint."
   value = {
     id                    = module.storage_account.id
     name                  = module.storage_account.name

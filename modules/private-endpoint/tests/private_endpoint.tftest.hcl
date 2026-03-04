@@ -104,7 +104,7 @@ run "private_dns_zone_group_configured" {
   }
 
   assert {
-    condition = azurerm_private_endpoint.this.private_dns_zone_group[0].private_dns_zone_ids[0] == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net"
+    condition     = azurerm_private_endpoint.this.private_dns_zone_group[0].private_dns_zone_ids[0] == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net"
     error_message = "DNS zone group should contain the supplied zone ID."
   }
 }
@@ -222,7 +222,7 @@ run "subresource_names_vault" {
   command = plan
 
   variables {
-    name              = "pe-vault-test"
+    name                           = "pe-vault-test"
     resource_group_name            = var.resource_group_name
     location                       = var.location
     subnet_id                      = var.subnet_id

@@ -34,7 +34,7 @@ validate: ## Validate Terraform config (ENV=dev)
 
 lint: ## Run tflint with AzureRM rules
 	@echo "$(BLUE)==> Linting...$(RESET)"
-	@tflint --config=.tflint.hcl --recursive
+	@tflint --config="$$(pwd)/.tflint.hcl" --recursive
 	@echo "$(GREEN)==> Clean$(RESET)"
 
 test: ## Run all terraform tests

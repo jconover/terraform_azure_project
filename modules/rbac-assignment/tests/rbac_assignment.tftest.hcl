@@ -175,7 +175,7 @@ run "custom_role_definition_created" {
   }
 
   assert {
-    condition     = contains(
+    condition = contains(
       azurerm_role_definition.this["limited_vm_operator"].permissions[0].actions,
       "Microsoft.Compute/virtualMachines/read"
     )
@@ -219,7 +219,7 @@ run "custom_role_with_data_actions" {
   }
 
   assert {
-    condition     = contains(
+    condition = contains(
       azurerm_role_definition.this["blob_reader_custom"].permissions[0].data_actions,
       "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read"
     )

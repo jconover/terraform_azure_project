@@ -133,12 +133,12 @@ variable "containers" {
 variable "lifecycle_rules" {
   description = "List of lifecycle management rules for blob storage"
   type = list(object({
-    name                      = string
-    enabled                   = optional(bool, true)
-    prefix_match              = optional(list(string), [])
-    tier_to_cool_after_days   = optional(number, null)
+    name                       = string
+    enabled                    = optional(bool, true)
+    prefix_match               = optional(list(string), [])
+    tier_to_cool_after_days    = optional(number, null)
     tier_to_archive_after_days = optional(number, null)
-    delete_after_days         = optional(number, null)
+    delete_after_days          = optional(number, null)
   }))
   default = []
 }

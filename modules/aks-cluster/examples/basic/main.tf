@@ -1,3 +1,18 @@
+terraform {
+  required_version = ">= 1.6.0"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "~> 2.0"
+    }
+  }
+}
+
 resource "azurerm_user_assigned_identity" "aks" {
   name                = "myapp-dev-eus2-aks-identity"
   resource_group_name = "myapp-dev-eus2-rg"
@@ -37,6 +52,7 @@ module "aks_cluster" {
 }
 
 output "aks_cluster" {
+  description = "Key attributes of the deployed AKS cluster including its ID, name, and FQDN."
   value = {
     id   = module.aks_cluster.id
     name = module.aks_cluster.name

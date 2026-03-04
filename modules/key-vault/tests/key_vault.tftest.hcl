@@ -72,11 +72,11 @@ run "rbac_authorization_explicit_disable" {
   command = plan
 
   variables {
-    name                       = "kv-rbac-off"
-    resource_group_name        = "rg-test"
-    location                   = "eastus"
-    tenant_id                  = "00000000-0000-0000-0000-000000000000"
-    enable_rbac_authorization  = false
+    name                      = "kv-rbac-off"
+    resource_group_name       = "rg-test"
+    location                  = "eastus"
+    tenant_id                 = "00000000-0000-0000-0000-000000000000"
+    enable_rbac_authorization = false
   }
 
   assert {

@@ -26,11 +26,6 @@ variable "policy_assignments" {
   default = {}
 }
 
-variable "use_builtin_policies" {
-  description = "Whether to include built-in policy assignments for common governance patterns"
-  type        = bool
-  default     = true
-}
 
 variable "scope" {
   description = "Default scope for policy definitions (subscription or management group ID)"

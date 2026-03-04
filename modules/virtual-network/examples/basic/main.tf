@@ -1,3 +1,14 @@
+terraform {
+  required_version = ">= 1.6.0"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+  }
+}
+
 module "virtual_network" {
   source = "../../"
 
@@ -13,6 +24,7 @@ module "virtual_network" {
 }
 
 output "vnet" {
+  description = "Key attributes of the deployed virtual network including its ID, name, and address space."
   value = {
     id            = module.virtual_network.id
     name          = module.virtual_network.name
