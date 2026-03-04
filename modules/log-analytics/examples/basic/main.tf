@@ -1,3 +1,14 @@
+terraform {
+  required_version = ">= 1.6.0"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+  }
+}
+
 module "log_analytics" {
   source = "../../"
 
@@ -15,6 +26,7 @@ module "log_analytics" {
 }
 
 output "log_analytics" {
+  description = "Key attributes of the deployed Log Analytics workspace including its ID, name, and workspace ID."
   value = {
     id           = module.log_analytics.id
     name         = module.log_analytics.name

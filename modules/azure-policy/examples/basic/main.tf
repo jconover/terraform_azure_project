@@ -1,3 +1,14 @@
+terraform {
+  required_version = ">= 1.6.0"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+  }
+}
+
 data "azurerm_subscription" "current" {}
 
 module "azure_policy" {
@@ -94,9 +105,11 @@ module "azure_policy" {
 }
 
 output "policy_definition_ids" {
-  value = module.azure_policy.policy_definition_ids
+  description = "Map of policy definition keys to their Azure resource IDs."
+  value       = module.azure_policy.policy_definition_ids
 }
 
 output "policy_assignment_ids" {
-  value = module.azure_policy.policy_assignment_ids
+  description = "Map of policy assignment keys to their Azure resource IDs."
+  value       = module.azure_policy.policy_assignment_ids
 }

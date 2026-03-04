@@ -1,3 +1,14 @@
+terraform {
+  required_version = ">= 1.6.0"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+  }
+}
+
 module "fabric_capacity" {
   source = "../../"
 
@@ -15,6 +26,7 @@ module "fabric_capacity" {
 }
 
 output "fabric_capacity" {
+  description = "Key attributes of the deployed Microsoft Fabric capacity resource."
   value = {
     id                  = module.fabric_capacity.id
     name                = module.fabric_capacity.name

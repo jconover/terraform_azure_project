@@ -1,4 +1,5 @@
 locals {
+  # tflint-ignore: terraform_unused_declarations
   common_tags = merge(
     {
       environment = var.environment

@@ -1,3 +1,14 @@
+terraform {
+  required_version = ">= 1.6.0"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+  }
+}
+
 module "managed_identity" {
   source = "../../"
 
@@ -13,6 +24,7 @@ module "managed_identity" {
 }
 
 output "managed_identity" {
+  description = "Key attributes of the deployed user-assigned managed identity including its ID, principal ID, client ID, tenant ID, and name."
   value = {
     id           = module.managed_identity.id
     principal_id = module.managed_identity.principal_id

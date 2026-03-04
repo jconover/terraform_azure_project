@@ -1,3 +1,14 @@
+terraform {
+  required_version = ">= 1.6.0"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+  }
+}
+
 resource "azurerm_resource_group" "example" {
   name     = "rg-pe-example"
   location = "eastus2"
@@ -41,9 +52,11 @@ module "private_endpoint" {
 }
 
 output "private_endpoint_id" {
-  value = module.private_endpoint.id
+  description = "The resource ID of the deployed private endpoint."
+  value       = module.private_endpoint.id
 }
 
 output "private_ip_address" {
-  value = module.private_endpoint.private_ip_address
+  description = "The private IP address assigned to the private endpoint network interface."
+  value       = module.private_endpoint.private_ip_address
 }

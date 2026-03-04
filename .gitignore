@@ -29,5 +29,13 @@ Thumbs.db
 .env
 *.auto.tfvars
 
+# Claude Code
+.claude/
+CLAUDE.md
+
 # OMC
 .omc/
+
+# Artifacts
+terraform-docs.tar.gz
+tfplan

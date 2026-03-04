@@ -31,9 +31,3 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
-
-variable "prevent_destroy" {
-  description = "Enable prevent_destroy lifecycle protection"
-  type        = bool
-  default     = false
-}
